@@ -87,6 +87,8 @@ Simple username/password form. Credentials are set in `.env`. On success, a JWT 
 
 ## Project structure
 
+test
+
 ```
 sammy-v2/
 ├── docker-compose.yml
