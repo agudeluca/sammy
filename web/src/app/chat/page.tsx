@@ -9,15 +9,27 @@ import { getUser, clearSession, isLoggedIn } from "@/lib/auth"
 
 export default function ChatPage() {
   const router = useRouter()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const user = getUser()
+  const storageKey = `sammy_chat_${user?.communityId}_${user?.username}`
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (typeof window === "undefined") return []
+    try {
+      const saved = localStorage.getItem(storageKey)
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const user = getUser()
 
   useEffect(() => {
     if (!isLoggedIn()) { router.replace("/login") }
   }, [router])
+
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify(messages)) } catch {}
+  }, [messages, storageKey])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -51,6 +63,7 @@ export default function ChatPage() {
   }
 
   const logout = () => { clearSession(); router.replace("/login") }
+  const clearChat = () => { setMessages([]); localStorage.removeItem(storageKey) }
 
   return (
     <div style={styles.page}>
@@ -63,6 +76,7 @@ export default function ChatPage() {
           {user?.role === "admin" && (
             <button onClick={() => router.push("/admin")} style={styles.linkBtn}>Admin</button>
           )}
+          <button onClick={clearChat} style={styles.linkBtn}>Clear chat</button>
           <button onClick={logout} style={styles.linkBtn}>Logout</button>
         </div>
       </header>
