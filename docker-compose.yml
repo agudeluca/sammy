@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  app:
+    build: ./app
+    ports:
+      - "3000:3000"
+    env_file: .env
+    volumes:
+      - ./app/uploads:/app/uploads
+      - ./app/data:/app/data
+    depends_on:
+      - parser
+
+  web:
+    build: ./web
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+
+  parser:
+    build: ./parser
+    ports:
+      - "8000:8000"
+
+networks:
+  default:
+    name: sammy-net

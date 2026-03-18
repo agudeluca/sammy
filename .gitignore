@@ -1,0 +1,10 @@
+.env
+node_modules/
+app/uploads/*
+!app/uploads/.gitkeep
+app/data/*
+!app/data/.gitkeep
+dist/
+__pycache__/
+*.pyc
+.venv/
