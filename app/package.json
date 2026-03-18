@@ -1,0 +1,20 @@
+{
+  "name": "sammy-app",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "elysia-rate-limit": "^4.5.1",
+    "@elysiajs/cors": "^1.2.0",
+    "@pinecone-database/pinecone": "^4.0.0",
+    "elysia": "^1.2.25",
+    "jose": "^5.10.0",
+    "openai": "^4.85.4"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

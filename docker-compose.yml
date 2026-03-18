@@ -1,0 +1,51 @@
+services:
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_INDEX=${PINECONE_INDEX:-sammy-docs}
+      - CURSOR_API_KEY=${CURSOR_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRY=${JWT_EXPIRY:-8h}
+      - PARSER_URL=http://parser:8000
+      - DATABASE_PATH=/app/data/sammy.db
+      - PORT=3001
+      - FRONTEND_URL=http://localhost:3000
+    depends_on:
+      - parser
+    networks:
+      - sammy-net
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    depends_on:
+      - app
+    networks:
+      - sammy-net
+
+  parser:
+    build:
+      context: ./parser
+      dockerfile: Dockerfile
+    networks:
+      - sammy-net
+    # No ports exposed to host — internal only
+
+networks:
+  sammy-net:
+    driver: bridge
+
+volumes:
+  sammy-data:

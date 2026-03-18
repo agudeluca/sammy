@@ -1,0 +1,171 @@
+type: collection.v1
+name: Sammy V2
+meta:
+  id: sammy-v2
+
+environments:
+  - name: Local
+    data:
+      base_url: http://localhost:3001
+      token: ""
+
+requests:
+  # ── Health ────────────────────────────────────────────────────────────────
+  - name: Health check
+    meta:
+      id: health
+    method: GET
+    url: "{{ base_url }}/health"
+
+  # ── Auth ──────────────────────────────────────────────────────────────────
+  - name: Get communities
+    meta:
+      id: auth-communities
+    method: GET
+    url: "{{ base_url }}/api/auth/communities"
+
+  - name: Login — acme admin (alice)
+    meta:
+      id: auth-login-alice
+    method: POST
+    url: "{{ base_url }}/api/auth/login"
+    headers:
+      - name: Content-Type
+        value: application/json
+    body:
+      text: |
+        {
+          "communityId": "acme",
+          "username": "admin",
+          "password": "huckaton"
+        }
+
+  - name: Login — acme collaborator (bob)
+    meta:
+      id: auth-login-bob
+    method: POST
+    url: "{{ base_url }}/api/auth/login"
+    headers:
+      - name: Content-Type
+        value: application/json
+    body:
+      text: |
+        {
+          "communityId": "acme",
+          "username": "bob",
+          "password": "huckaton"
+        }
+
+  - name: Login — globex admin (carol)
+    meta:
+      id: auth-login-carol
+    method: POST
+    url: "{{ base_url }}/api/auth/login"
+    headers:
+      - name: Content-Type
+        value: application/json
+    body:
+      text: |
+        {
+          "communityId": "globex",
+          "username": "admin",
+          "password": "huckaton"
+        }
+
+  - name: Login — globex collaborator (dave)
+    meta:
+      id: auth-login-dave
+    method: POST
+    url: "{{ base_url }}/api/auth/login"
+    headers:
+      - name: Content-Type
+        value: application/json
+    body:
+      text: |
+        {
+          "communityId": "globex",
+          "username": "dave",
+          "password": "huckaton"
+        }
+
+  # ── Admin ─────────────────────────────────────────────────────────────────
+  - name: Upload document
+    meta:
+      id: admin-upload
+    method: POST
+    url: "{{ base_url }}/api/upload"
+    headers:
+      - name: Authorization
+        value: "Bearer {{ token }}"
+    body:
+      mimeType: multipart/form-data
+      params:
+        - name: file
+          type: file
+          fileName: ""
+
+  - name: Get documents
+    meta:
+      id: admin-documents
+    method: GET
+    url: "{{ base_url }}/api/documents"
+    headers:
+      - name: Authorization
+        value: "Bearer {{ token }}"
+
+  # ── Chat ──────────────────────────────────────────────────────────────────
+  - name: Chat — simple question
+    meta:
+      id: chat-simple
+    method: POST
+    url: "{{ base_url }}/api/chat"
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ token }}"
+    body:
+      text: |
+        {
+          "question": "¿De qué tratan los documentos?",
+          "history": []
+        }
+
+  - name: Chat — with history
+    meta:
+      id: chat-history
+    method: POST
+    url: "{{ base_url }}/api/chat"
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ token }}"
+    body:
+      text: |
+        {
+          "question": "¿Puedes darme más detalles?",
+          "history": [
+            { "role": "user",      "content": "¿De qué tratan los documentos?" },
+            { "role": "assistant", "content": "Los documentos tratan sobre..." }
+          ]
+        }
+
+  # ── Parser (internal — direct access for testing) ─────────────────────────
+  - name: Parser — health
+    meta:
+      id: parser-health
+    method: GET
+    url: http://localhost:8000/health
+
+  - name: Parser — parse file
+    meta:
+      id: parser-parse
+    method: POST
+    url: http://localhost:8000/parse
+    body:
+      mimeType: multipart/form-data
+      params:
+        - name: file
+          type: file
+          fileName: ""
