@@ -29,25 +29,42 @@ function extractBearer(authHeader: string | undefined): string | null {
   return authHeader.slice(7)
 }
 
+function jsonError(status: number, message: string) {
+  return new Response(JSON.stringify({ message }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  })
+}
+
 export const requireAuth = new Elysia({ name: "requireAuth" }).derive(
   { as: "scoped" },
-  async ({ headers, error }) => {
+  async ({ headers }) => {
     const token = extractBearer(headers.authorization)
-    if (!token) return error(401, { message: "Missing token" })
+    if (!token) throw jsonError(401, "Missing token")
 
     try {
       const user = await verifyToken(token)
       return { user }
     } catch {
-      return error(401, { message: "Invalid or expired token" })
+      throw jsonError(401, "Invalid or expired token")
     }
   }
 )
 
-export const requireAdmin = new Elysia({ name: "requireAdmin" })
-  .use(requireAuth)
-  .derive({ as: "scoped" }, ({ user, error }) => {
-    if (!user) return error(401, { message: "Unauthorized" })
-    if (user.role !== "admin") return error(403, { message: "Admin only" })
-    return {}
-  })
+export const requireAdmin = new Elysia({ name: "requireAdmin" }).derive(
+  { as: "scoped" },
+  async ({ headers }) => {
+    const token = extractBearer(headers.authorization)
+    if (!token) throw jsonError(401, "Missing token")
+
+    let user: JwtPayload
+    try {
+      user = await verifyToken(token)
+    } catch {
+      throw jsonError(401, "Invalid or expired token")
+    }
+
+    if (user.role !== "admin") throw jsonError(403, "Admin only")
+    return { user }
+  }
+)
