@@ -4,15 +4,18 @@
   "scripts": {
     "dev": "bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:e2e": "bun test tests/e2e.test.ts --timeout 90000"
   },
   "dependencies": {
-    "elysia-rate-limit": "^4.5.1",
+    "@anthropic-ai/sdk": "^0.55.0",
     "@elysiajs/cors": "^1.2.0",
+    "@huggingface/transformers": "^3.8.1",
     "@pinecone-database/pinecone": "^4.0.0",
     "elysia": "^1.2.25",
+    "elysia-rate-limit": "^4.5.1",
     "jose": "^5.10.0",
-    "openai": "^4.85.4"
+    "mammoth": "^1.12.0"
   },
   "devDependencies": {
     "@types/bun": "latest"

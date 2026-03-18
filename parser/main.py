@@ -1,16 +1,32 @@
 import os
 import tempfile
 from pathlib import Path
+from typing import List
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 
 app = FastAPI()
+
+# Load model eagerly at startup to avoid first-request failures
+from sentence_transformers import SentenceTransformer as _ST
+_embed_model = _ST("all-mpnet-base-v2")
+
+
+class EmbedRequest(BaseModel):
+    texts: List[str]
 
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.post("/embed")
+def embed(req: EmbedRequest):
+    vectors = _embed_model.encode(req.texts, normalize_embeddings=True).tolist()
+    return {"vectors": vectors}
 
 
 @app.post("/parse")

@@ -3,7 +3,9 @@ import { config } from "../config"
 import type { Chunk } from "../lib/chunker"
 
 const pc = new Pinecone({ apiKey: config.pineconeApiKey })
-const index = pc.index(config.pineconeIndex)
+const index = config.pineconeHost
+  ? pc.index(config.pineconeIndex, config.pineconeHost)
+  : pc.index(config.pineconeIndex)
 
 const UPSERT_BATCH = 100
 

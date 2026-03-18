@@ -1,102 +1,182 @@
-type: collection.v1
-name: Sammy V2
-meta:
-  id: sammy-v2
+_type: export
+__export_format: 4
+__export_date: "2026-03-18T00:00:00.000Z"
+__export_source: "insomnia.desktop.app:v9.0.0"
+resources:
+  # ── Workspace ───────────────────────────────────────────────────────────────
+  - _id: wrk_sammy_v2
+    _type: workspace
+    name: Sammy V2
+    description: ""
+    scope: collection
 
-environments:
-  - name: Local
+  # ── Environments ────────────────────────────────────────────────────────────
+  - _id: env_base
+    _type: environment
+    parentId: wrk_sammy_v2
+    name: Base Environment
+    data: {}
+
+  - _id: env_local
+    _type: environment
+    parentId: env_base
+    name: Local
     data:
       base_url: http://localhost:3001
       token: ""
 
-requests:
-  # ── Health ────────────────────────────────────────────────────────────────
-  - name: Health check
-    meta:
-      id: health
-    method: GET
-    url: "{{ base_url }}/health"
+  # ── Folders ─────────────────────────────────────────────────────────────────
+  - _id: fld_health
+    _type: request_group
+    parentId: wrk_sammy_v2
+    name: Health
 
-  # ── Auth ──────────────────────────────────────────────────────────────────
-  - name: Get communities
-    meta:
-      id: auth-communities
-    method: GET
-    url: "{{ base_url }}/api/auth/communities"
+  - _id: fld_auth
+    _type: request_group
+    parentId: wrk_sammy_v2
+    name: Auth
 
-  - name: Login — acme admin (alice)
-    meta:
-      id: auth-login-alice
+  - _id: fld_admin
+    _type: request_group
+    parentId: wrk_sammy_v2
+    name: Admin
+
+  - _id: fld_chat
+    _type: request_group
+    parentId: wrk_sammy_v2
+    name: Chat
+
+  - _id: fld_parser
+    _type: request_group
+    parentId: wrk_sammy_v2
+    name: Parser (internal)
+
+  # ── Health ───────────────────────────────────────────────────────────────────
+  - _id: req_health
+    _type: request
+    parentId: fld_health
+    name: Health check
+    method: GET
+    url: "{{ _.base_url }}/health"
+    headers: []
+    body: {}
+
+  # ── Auth ─────────────────────────────────────────────────────────────────────
+  - _id: req_auth_communities
+    _type: request
+    parentId: fld_auth
+    name: Get communities
+    method: GET
+    url: "{{ _.base_url }}/api/auth/communities"
+    headers: []
+    body: {}
+
+  - _id: req_auth_login_alice
+    _type: request
+    parentId: fld_auth
+    name: "Login — acme admin (alice)"
     method: POST
-    url: "{{ base_url }}/api/auth/login"
+    url: "{{ _.base_url }}/api/auth/login"
     headers:
       - name: Content-Type
         value: application/json
     body:
+      mimeType: application/json
       text: |
         {
           "communityId": "acme",
           "username": "admin",
           "password": "huckaton"
         }
+    afterResponseScript: |
+      const body = await insomnia.response.json();
+      if (body.token) {
+        insomnia.environment.set('token', body.token);
+        console.log('Token saved for alice (acme admin)');
+      }
 
-  - name: Login — acme collaborator (bob)
-    meta:
-      id: auth-login-bob
+  - _id: req_auth_login_bob
+    _type: request
+    parentId: fld_auth
+    name: "Login — acme collaborator (bob)"
     method: POST
-    url: "{{ base_url }}/api/auth/login"
+    url: "{{ _.base_url }}/api/auth/login"
     headers:
       - name: Content-Type
         value: application/json
     body:
+      mimeType: application/json
       text: |
         {
           "communityId": "acme",
           "username": "bob",
           "password": "huckaton"
         }
+    afterResponseScript: |
+      const body = await insomnia.response.json();
+      if (body.token) {
+        insomnia.environment.set('token', body.token);
+        console.log('Token saved for bob (acme collaborator)');
+      }
 
-  - name: Login — globex admin (carol)
-    meta:
-      id: auth-login-carol
+  - _id: req_auth_login_carol
+    _type: request
+    parentId: fld_auth
+    name: "Login — globex admin (carol)"
     method: POST
-    url: "{{ base_url }}/api/auth/login"
+    url: "{{ _.base_url }}/api/auth/login"
     headers:
       - name: Content-Type
         value: application/json
     body:
+      mimeType: application/json
       text: |
         {
           "communityId": "globex",
           "username": "admin",
           "password": "huckaton"
         }
+    afterResponseScript: |
+      const body = await insomnia.response.json();
+      if (body.token) {
+        insomnia.environment.set('token', body.token);
+        console.log('Token saved for carol (globex admin)');
+      }
 
-  - name: Login — globex collaborator (dave)
-    meta:
-      id: auth-login-dave
+  - _id: req_auth_login_dave
+    _type: request
+    parentId: fld_auth
+    name: "Login — globex collaborator (dave)"
     method: POST
-    url: "{{ base_url }}/api/auth/login"
+    url: "{{ _.base_url }}/api/auth/login"
     headers:
       - name: Content-Type
         value: application/json
     body:
+      mimeType: application/json
       text: |
         {
           "communityId": "globex",
           "username": "dave",
           "password": "huckaton"
         }
+    afterResponseScript: |
+      const body = await insomnia.response.json();
+      if (body.token) {
+        insomnia.environment.set('token', body.token);
+        console.log('Token saved for dave (globex collaborator)');
+      }
 
-  # ── Admin ─────────────────────────────────────────────────────────────────
-  - name: Upload document
-    meta:
-      id: admin-upload
+  # ── Admin ────────────────────────────────────────────────────────────────────
+  - _id: req_admin_upload
+    _type: request
+    parentId: fld_admin
+    name: Upload document
     method: POST
-    url: "{{ base_url }}/api/upload"
+    url: "{{ _.base_url }}/api/upload"
     headers:
       - name: Authorization
-        value: "Bearer {{ token }}"
+        value: "Bearer {{ _.token }}"
     body:
       mimeType: multipart/form-data
       params:
@@ -104,44 +184,50 @@ requests:
           type: file
           fileName: ""
 
-  - name: Get documents
-    meta:
-      id: admin-documents
+  - _id: req_admin_documents
+    _type: request
+    parentId: fld_admin
+    name: Get documents
     method: GET
-    url: "{{ base_url }}/api/documents"
+    url: "{{ _.base_url }}/api/documents"
     headers:
       - name: Authorization
-        value: "Bearer {{ token }}"
+        value: "Bearer {{ _.token }}"
+    body: {}
 
-  # ── Chat ──────────────────────────────────────────────────────────────────
-  - name: Chat — simple question
-    meta:
-      id: chat-simple
+  # ── Chat ─────────────────────────────────────────────────────────────────────
+  - _id: req_chat_simple
+    _type: request
+    parentId: fld_chat
+    name: "Chat — simple question"
     method: POST
-    url: "{{ base_url }}/api/chat"
+    url: "{{ _.base_url }}/api/chat"
     headers:
       - name: Content-Type
         value: application/json
       - name: Authorization
-        value: "Bearer {{ token }}"
+        value: "Bearer {{ _.token }}"
     body:
+      mimeType: application/json
       text: |
         {
           "question": "¿De qué tratan los documentos?",
           "history": []
         }
 
-  - name: Chat — with history
-    meta:
-      id: chat-history
+  - _id: req_chat_history
+    _type: request
+    parentId: fld_chat
+    name: "Chat — with history"
     method: POST
-    url: "{{ base_url }}/api/chat"
+    url: "{{ _.base_url }}/api/chat"
     headers:
       - name: Content-Type
         value: application/json
       - name: Authorization
-        value: "Bearer {{ token }}"
+        value: "Bearer {{ _.token }}"
     body:
+      mimeType: application/json
       text: |
         {
           "question": "¿Puedes darme más detalles?",
@@ -151,18 +237,23 @@ requests:
           ]
         }
 
-  # ── Parser (internal — direct access for testing) ─────────────────────────
-  - name: Parser — health
-    meta:
-      id: parser-health
+  # ── Parser (internal) ────────────────────────────────────────────────────────
+  - _id: req_parser_health
+    _type: request
+    parentId: fld_parser
+    name: Parser — health
     method: GET
     url: http://localhost:8000/health
+    headers: []
+    body: {}
 
-  - name: Parser — parse file
-    meta:
-      id: parser-parse
+  - _id: req_parser_parse
+    _type: request
+    parentId: fld_parser
+    name: Parser — parse file
     method: POST
     url: http://localhost:8000/parse
+    headers: []
     body:
       mimeType: multipart/form-data
       params:

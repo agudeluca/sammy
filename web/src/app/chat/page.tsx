@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 import { api, type ChatMessage } from "@/lib/api"
 import { getUser, clearSession, isLoggedIn } from "@/lib/auth"
 
@@ -74,7 +76,13 @@ export default function ChatPage() {
         {messages.map((msg, i) => (
           <div key={i} style={{ ...styles.bubble, ...(msg.role === "user" ? styles.userBubble : styles.aiBubble) }}>
             <div style={styles.bubbleLabel}>{msg.role === "user" ? "You" : "Sammy"}</div>
-            <div style={styles.bubbleText}>{msg.content}</div>
+            {msg.role === "assistant" ? (
+              <div style={styles.markdown} className="markdown">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+              </div>
+            ) : (
+              <div style={styles.bubbleText}>{msg.content}</div>
+            )}
           </div>
         ))}
         {loading && (
@@ -163,6 +171,11 @@ const styles: Record<string, React.CSSProperties> = {
   },
   bubbleLabel: { fontSize: "0.7rem", fontWeight: 700, marginBottom: "0.25rem", opacity: 0.7 },
   bubbleText: { whiteSpace: "pre-wrap", wordBreak: "break-word" },
+  markdown: {
+    wordBreak: "break-word",
+    lineHeight: 1.7,
+    fontSize: "0.95rem",
+  },
   inputBar: {
     background: "#fff",
     borderTop: "1px solid #e5e7eb",

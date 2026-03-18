@@ -1,23 +1,31 @@
-import OpenAI from "openai"
+import Anthropic from "@anthropic-ai/sdk"
+import { pipeline, env } from "@huggingface/transformers"
 import { config } from "../config"
 
-const cursor = new OpenAI({
-  apiKey: config.cursorApiKey,
-  baseURL: "https://api.cursor.sh/v1",
-})
+const anthropic = new Anthropic({ apiKey: config.anthropicApiKey })
 
-const BATCH_SIZE = 100
+// Cache model in /app/.cache so it persists across container restarts
+env.cacheDir = "/app/.cache/hf"
+
+const BATCH_SIZE = 32
+
+type EmbeddingPipeline = Awaited<ReturnType<typeof pipeline>>
+let _embedder: EmbeddingPipeline | null = null
+
+async function getEmbedder(): Promise<EmbeddingPipeline> {
+  if (!_embedder) {
+    _embedder = await pipeline("feature-extraction", "Xenova/all-mpnet-base-v2", { dtype: "q8" })
+  }
+  return _embedder
+}
 
 export async function embedTexts(texts: string[]): Promise<number[][]> {
+  const embedder = await getEmbedder()
   const results: number[][] = []
   for (let i = 0; i < texts.length; i += BATCH_SIZE) {
     const batch = texts.slice(i, i + BATCH_SIZE)
-    const res = await cursor.embeddings.create({
-      model: "text-embedding-3-small",
-      input: batch,
-      dimensions: 1536,
-    })
-    results.push(...res.data.map((d) => d.embedding))
+    const output = await embedder(batch, { pooling: "mean", normalize: true })
+    results.push(...(output.tolist() as number[][]))
   }
   return results
 }
@@ -37,29 +45,28 @@ export async function generateAnswer(question: string, contextChunks: string[], 
     .map((chunk, i) => `[${i + 1}] ${chunk}`)
     .join("\n\n---\n\n")
 
-  const systemPrompt = `Eres un asistente de búsqueda de documentos. Responde ÚNICAMENTE basándote en el contexto proporcionado a continuación. No uses conocimiento externo.
+  const systemPrompt = `Eres Sammy, un asistente amable que responde preguntas basándose en los documentos del equipo. Sé directo y conciso.
 
 Reglas:
-- Cita las secciones relevantes usando los números de contexto, por ejemplo: [1], [2].
-- Si el contexto no contiene suficiente información para responder la pregunta, responde exactamente: "No tengo suficiente información en los documentos para responder eso."
-- Responde en el mismo idioma en que se hace la pregunta.
+- Responde únicamente con información del contexto provisto. No uses conocimiento externo.
+- Si el contexto no contiene la respuesta, di: "No encontré esa información en los documentos."
+- Cita las fuentes con [1], [2], etc. cuando sea útil.
+- Responde en el mismo idioma en que te hablan.
 
 Contexto:
 ${contextBlock}`
 
-  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: "system", content: systemPrompt },
-    ...history.map((m) => ({ role: m.role, content: m.content }) satisfies OpenAI.Chat.ChatCompletionMessageParam),
-    { role: "user", content: question },
-  ]
-
-  const response = await cursor.chat.completions.create({
-    model: "claude-sonnet-4-6",
+  const response = await anthropic.messages.create({
+    model: "claude-opus-4-6",
     max_tokens: 1024,
-    messages,
+    system: systemPrompt,
+    messages: [
+      ...history.map((m) => ({ role: m.role, content: m.content }) as Anthropic.MessageParam),
+      { role: "user", content: question },
+    ],
   })
 
-  const content = response.choices[0]?.message?.content
-  if (!content) throw new Error("Empty response from Cursor API")
-  return content
+  const block = response.content.find((b) => b.type === "text")
+  if (!block || block.type !== "text") throw new Error("Empty response from Anthropic API")
+  return block.text
 }
