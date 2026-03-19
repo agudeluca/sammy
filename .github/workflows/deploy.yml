@@ -36,6 +36,8 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_TAG_WEB }}
           platforms: linux/amd64
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_TAG_WEB }}-cache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_TAG_WEB }}-cache,mode=max
 
