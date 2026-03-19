@@ -69,4 +69,5 @@ jobs:
         working-directory: ./app
         env:
           API_URL: ${{ secrets.PROD_API_URL }}
+          NODE_TLS_REJECT_UNAUTHORIZED: "0"
         run: bun test tests/smoke.test.ts --timeout 60000

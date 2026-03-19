@@ -9,7 +9,7 @@
 import { describe, it, expect, beforeAll } from "bun:test"
 
 const BASE = process.env.API_URL ?? "http://localhost:3001"
-const COMMUNITY_ID = process.env.COMMUNITY_ID ?? "team35"
+const COMMUNITY_ID = process.env.COMMUNITY_ID ?? "214834"
 const USERNAME = "admin"
 const PASSWORD = "huckaton"
 
