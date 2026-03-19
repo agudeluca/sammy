@@ -21,8 +21,6 @@ services:
     image: ${DOCKERHUB_TAG_WEB}
     ports:
       - "3010:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     depends_on:
       - app
     restart: unless-stopped
