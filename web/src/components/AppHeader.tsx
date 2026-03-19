@@ -66,7 +66,7 @@ export default function AppHeader({
       elevation={0}
       sx={{ borderBottom: "1px solid", borderColor: "grey.100" }}
     >
-      <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1, minHeight: 56 }}>
+      <Toolbar sx={{ px: { xs: 2, sm: 3 }, gap: 1, minHeight: 56, alignItems: "center" }}>
         {/* Logo */}
         <Box sx={{ position: "relative", width: 30, height: 30, mr: 0.5, flexShrink: 0 }}>
           <Image src="/sammy.png" alt="Sammy" fill style={{ objectFit: "contain" }} />
@@ -74,9 +74,9 @@ export default function AppHeader({
         <Typography variant="h6" sx={{ fontWeight: 700, color: "text.primary", fontSize: "1rem" }}>
           Sammy
         </Typography>
-        {user?.communityId && (
+        {(user?.communityName || user?.communityId) && (
           <Chip
-            label={user.communityId}
+            label={user.communityName || user.communityId}
             size="small"
             sx={{
               ml: 1,
@@ -125,7 +125,8 @@ export default function AppHeader({
               gap: 1,
               ml: 0.5,
               px: 1,
-              py: 0.5,
+              py: 0,
+              height: 36,
               borderRadius: 2,
               cursor: "pointer",
               "&:hover": { bgcolor: "grey.100" },

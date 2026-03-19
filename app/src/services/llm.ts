@@ -14,6 +14,9 @@ import {
   searchNews,
   getRecentNews,
   formatNewsContext,
+  searchRecognitions,
+  getRecentRecognitions,
+  formatRecognitionsContext,
 } from "./redash"
 import { queryChunks } from "./pinecone"
 
@@ -117,6 +120,21 @@ const REDASH_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "search_recognitions",
+    description:
+      "Busca reconocimientos otorgados entre colaboradores de la comunidad. Usar cuando el usuario pregunta sobre reconocimientos, premios, puntos, quién reconoció a quién, o logros de compañeros.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Nombre de persona, tipo de reconocimiento o palabras clave. Dejar vacío para ver los más recientes.",
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: "search_documents",
     description:
       "Busca en los documentos y archivos subidos a la comunidad (manuales, reglamentos, presentaciones, contratos). Usar para preguntas sobre contenido específico de documentos.",
@@ -138,6 +156,7 @@ Tienes acceso a herramientas para obtener información actualizada:
 - search_knowledge_library: para buscar sobre un tema específico en la librería de conocimientos
 - search_wall_posts: para buscar posteos del muro de la comunidad, anuncios, novedades, comunicados
 - search_news: para buscar noticias y comunicados oficiales publicados en la comunidad
+- search_recognitions: para buscar reconocimientos otorgados entre colaboradores, puntos, premios
 - search_documents: para buscar en documentos subidos (manuales, reglamentos, presentaciones)
 
 Reglas:
@@ -196,6 +215,17 @@ async function executeTool(
         ? await searchNews(ctx.instanceId, query, 5)
         : await getRecentNews(ctx.instanceId, 10)
       return formatNewsContext(articles)
+    }
+
+    if (name === "search_recognitions") {
+      if (!ctx.instanceId) {
+        return "No hay reconocimientos configurados para esta instancia."
+      }
+      const query = input.query?.trim()
+      const recognitions = query
+        ? await searchRecognitions(ctx.instanceId, query, 10)
+        : await getRecentRecognitions(ctx.instanceId, 10)
+      return formatRecognitionsContext(recognitions)
     }
 
     if (name === "search_documents") {

@@ -38,7 +38,8 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const result = await api.login(communityId, username, password)
-      saveSession(result.token, result.user)
+      const communityName = communities.find((c) => c.id === communityId)?.name
+      saveSession(result.token, { ...result.user, communityName })
       router.replace(result.user.role === "admin" ? "/admin" : "/chat")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed")

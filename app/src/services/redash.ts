@@ -553,3 +553,105 @@ export function formatNewsContext(articles: NewsArticle[]): string {
 
   return lines.join("\n")
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recognitions
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface Recognition {
+  recognitionId: number
+  type: string
+  senderName: string
+  receiverName: string
+  points: number
+  issuedAt: string
+  issuedMonth: string
+  expired: boolean
+}
+
+interface RecognitionRow {
+  "ID Reconocimiento": number
+  Reconocimiento: string
+  Emisor: string
+  Receptor: string
+  "Puntos recibidos": number
+  "Fecha emisión": string
+  "Mes emisión": string
+  "¿Expiraron?": boolean
+}
+
+interface RecognitionsCacheEntry {
+  recognitions: Recognition[]
+  fetchedAt: number
+}
+const recognitionsCache = new Map<number, RecognitionsCacheEntry>()
+
+async function fetchRecognitions(instanceId: number): Promise<Recognition[]> {
+  const cached = recognitionsCache.get(instanceId)
+  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+    return cached.recognitions
+  }
+
+  const rows = await executeRedashQuery<RecognitionRow>(
+    config.redashRecognitionsQueryId,
+    { instance_id: String(instanceId) },
+    300
+  )
+
+  const recognitions = rows.map((r) => ({
+    recognitionId: r["ID Reconocimiento"],
+    type: r.Reconocimiento ?? "",
+    senderName: r.Emisor ?? "",
+    receiverName: r.Receptor ?? "",
+    points: r["Puntos recibidos"] ?? 0,
+    issuedAt: r["Fecha emisión"] ?? "",
+    issuedMonth: r["Mes emisión"] ?? "",
+    expired: r["¿Expiraron?"] ?? false,
+  }))
+
+  recognitionsCache.set(instanceId, { recognitions, fetchedAt: Date.now() })
+  return recognitions
+}
+
+export async function searchRecognitions(
+  instanceId: number,
+  question: string,
+  topK = 10
+): Promise<Recognition[]> {
+  const recognitions = await fetchRecognitions(instanceId)
+  if (recognitions.length === 0) return []
+
+  const questionWords = tokenize(question)
+  if (questionWords.length === 0) return recognitions.slice(0, topK)
+
+  const scored = recognitions
+    .map((r) => {
+      const haystack = `${r.type} ${r.senderName} ${r.receiverName}`.toLowerCase()
+      const score = questionWords.reduce((s, w) => s + (haystack.includes(w) ? 1 : 0), 0)
+      return { r, score }
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK)
+
+  return scored.map(({ r }) => r)
+}
+
+export async function getRecentRecognitions(instanceId: number, limit = 10): Promise<Recognition[]> {
+  const recognitions = await fetchRecognitions(instanceId)
+  return recognitions.slice(0, limit)
+}
+
+export function formatRecognitionsContext(recognitions: Recognition[]): string {
+  if (recognitions.length === 0) return "No se encontraron reconocimientos."
+
+  const lines: string[] = ["[RECONOCIMIENTOS DE LA COMUNIDAD]", ""]
+
+  for (const r of recognitions) {
+    lines.push(`**${r.type}** — ${r.senderName} → ${r.receiverName} (${r.issuedAt})`)
+    if (r.points) lines.push(`  Puntos: ${r.points}`)
+    lines.push("")
+  }
+
+  return lines.join("\n")
+}

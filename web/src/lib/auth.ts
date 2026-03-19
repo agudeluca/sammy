@@ -2,6 +2,7 @@ export interface SessionUser {
   id: string
   username: string
   communityId: string
+  communityName?: string
   role: "admin" | "collaborator"
 }
 
