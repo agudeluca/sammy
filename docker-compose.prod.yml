@@ -2,7 +2,7 @@ services:
   app:
     image: ${DOCKERHUB_TAG_APP}
     ports:
-      - "3001:3001"
+      - "3011:3001"
     volumes:
       - sammy-data:/app/data
     environment:
@@ -14,13 +14,13 @@ services:
       - JWT_EXPIRY=${JWT_EXPIRY:-8h}
       - DATABASE_PATH=/app/data/sammy.db
       - PORT=3001
-      - FRONTEND_URL=${FRONTEND_URL}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3010}
     restart: unless-stopped
 
   web:
     image: ${DOCKERHUB_TAG_WEB}
     ports:
-      - "3000:3000"
+      - "3010:3000"
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     depends_on:
