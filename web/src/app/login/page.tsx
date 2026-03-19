@@ -115,7 +115,6 @@ export default function LoginPage() {
                 label="Usuario"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="tu usuario"
                 required
                 fullWidth
                 size="small"
