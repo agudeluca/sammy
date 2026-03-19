@@ -1,12 +1,10 @@
 services:
   app:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
+    image: ${DOCKERHUB_TAG_APP}
     ports:
-      - "3001:3001"
+      - "3011:3001"
     volumes:
-      - ./data:/app/data
+      - sammy-data:/app/data
     environment:
       - PINECONE_API_KEY=${PINECONE_API_KEY}
       - PINECONE_INDEX=${PINECONE_INDEX:-sammy}
@@ -16,26 +14,18 @@ services:
       - JWT_EXPIRY=${JWT_EXPIRY:-8h}
       - DATABASE_PATH=/app/data/sammy.db
       - PORT=3001
-      - FRONTEND_URL=http://localhost:3000
-    networks:
-      - sammy-net
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3010}
+    restart: unless-stopped
 
   web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
+    image: ${DOCKERHUB_TAG_WEB}
     ports:
-      - "3000:3000"
+      - "3010:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     depends_on:
       - app
-    networks:
-      - sammy-net
-
-networks:
-  sammy-net:
-    driver: bridge
+    restart: unless-stopped
 
 volumes:
   sammy-data:
