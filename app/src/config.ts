@@ -15,7 +15,7 @@ export const config = {
   port: Number(process.env.PORT ?? 3001),
   // Redash
   redashBaseUrl: process.env.REDASH_BASE_URL ?? "https://redash.humand.co",
-  redashApiKey: required("REDASH_API_KEY"),
+  redashApiKey: process.env.REDASH_API_KEY ?? "",
   redashVacationQueryId: Number(process.env.REDASH_VACATION_QUERY_ID ?? "33517"),
   redashKnowledgeQueryId: Number(process.env.REDASH_KNOWLEDGE_QUERY_ID ?? "33514"),
 };

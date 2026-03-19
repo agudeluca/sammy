@@ -16,6 +16,10 @@ services:
       - DATABASE_PATH=/app/data/sammy.db
       - PORT=3001
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3010}
+      - REDASH_API_KEY=${REDASH_API_KEY}
+      - REDASH_BASE_URL=${REDASH_BASE_URL:-https://redash.humand.co}
+      - REDASH_VACATION_QUERY_ID=${REDASH_VACATION_QUERY_ID:-33517}
+      - REDASH_KNOWLEDGE_QUERY_ID=${REDASH_KNOWLEDGE_QUERY_ID:-33514}
     restart: unless-stopped
 
   web:
