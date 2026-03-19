@@ -13,9 +13,12 @@ import TableContainer from "@mui/material/TableContainer"
 import TableHead from "@mui/material/TableHead"
 import TableRow from "@mui/material/TableRow"
 import Chip from "@mui/material/Chip"
+import Snackbar from "@mui/material/Snackbar"
 import Alert from "@mui/material/Alert"
+import Tooltip from "@mui/material/Tooltip"
 import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined"
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined"
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline"
 import AppHeader from "@/components/AppHeader"
 import { api, type Document } from "@/lib/api"
 import { getUser, isLoggedIn } from "@/lib/auth"
@@ -27,12 +30,24 @@ const STATUS_CONFIG: Record<string, { label: string; color: "default" | "warning
   error: { label: "Error", color: "error" },
 }
 
+function parseErrorMsg(raw: string): string {
+  try {
+    // Strip leading HTTP status code like "400 {...}"
+    const jsonStart = raw.indexOf("{")
+    if (jsonStart === -1) return raw
+    const parsed = JSON.parse(raw.slice(jsonStart))
+    return parsed?.error?.message ?? parsed?.message ?? raw
+  } catch {
+    return raw
+  }
+}
+
 export default function AdminPage() {
   const router = useRouter()
   const [documents, setDocuments] = useState<Document[]>([])
   const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState("")
   const [dragging, setDragging] = useState(false)
+  const [toast, setToast] = useState<{ message: string; severity: "error" | "success" | "info" } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const user = getUser()
@@ -72,14 +87,15 @@ export default function AdminPage() {
   }, [])
 
   const uploadFile = async (file: File) => {
-    setUploadError("")
     setUploading(true)
     try {
       await api.uploadFile(file)
       await loadDocuments()
       startPolling()
+      setToast({ message: `"${file.name}" subido correctamente`, severity: "success" })
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Upload failed")
+      const raw = err instanceof Error ? err.message : "Error al subir"
+      setToast({ message: parseErrorMsg(raw), severity: "error" })
     } finally {
       setUploading(false)
     }
@@ -129,15 +145,9 @@ export default function AdminPage() {
                 cursor: "pointer",
                 transition: "all 0.15s",
                 bgcolor: dragging ? "primary.light" : "transparent",
-                "&:hover": {
-                  borderColor: "primary.main",
-                  bgcolor: "primary.light",
-                },
+                "&:hover": { borderColor: "primary.main", bgcolor: "primary.light" },
               }}
-              onDragOver={(e) => {
-                e.preventDefault()
-                setDragging(true)
-              }}
+              onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
@@ -151,9 +161,7 @@ export default function AdminPage() {
               />
               <UploadFileOutlinedIcon sx={{ fontSize: 40, color: uploading ? "primary.main" : "grey.400", mb: 1 }} />
               {uploading ? (
-                <Typography variant="body2" color="primary">
-                  Subiendo...
-                </Typography>
+                <Typography variant="body2" color="primary">Subiendo...</Typography>
               ) : (
                 <>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary" }}>
@@ -165,11 +173,6 @@ export default function AdminPage() {
                 </>
               )}
             </Box>
-            {uploadError && (
-              <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>
-                {uploadError}
-              </Alert>
-            )}
           </CardContent>
         </Card>
 
@@ -188,9 +191,7 @@ export default function AdminPage() {
             {documents.length === 0 ? (
               <Box sx={{ py: 6, textAlign: "center" }}>
                 <InsertDriveFileOutlinedIcon sx={{ fontSize: 40, color: "grey.300", mb: 1.5 }} />
-                <Typography variant="body2" color="text.secondary">
-                  No hay documentos todavía
-                </Typography>
+                <Typography variant="body2" color="text.secondary">No hay documentos todavía</Typography>
               </Box>
             ) : (
               <TableContainer component={Box}>
@@ -209,29 +210,42 @@ export default function AdminPage() {
                         <TableCell>
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             <InsertDriveFileOutlinedIcon sx={{ fontSize: 16, color: "grey.400" }} />
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              {doc.filename}
-                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>{doc.filename}</Typography>
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Box>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             <Chip
                               label={STATUS_CONFIG[doc.status]?.label ?? doc.status}
                               color={STATUS_CONFIG[doc.status]?.color ?? "default"}
                               size="small"
                             />
                             {doc.error_msg && (
-                              <Typography variant="caption" color="error" sx={{ display: "block", mt: 0.5 }}>
-                                {doc.error_msg}
-                              </Typography>
+                              <Tooltip
+                                title={parseErrorMsg(doc.error_msg)}
+                                arrow
+                                placement="right"
+                                componentsProps={{
+                                  tooltip: {
+                                    sx: {
+                                      bgcolor: "grey.900",
+                                      color: "#fff",
+                                      fontSize: "0.78rem",
+                                      maxWidth: 320,
+                                      borderRadius: 1.5,
+                                      p: 1.5,
+                                    },
+                                  },
+                                  arrow: { sx: { color: "grey.900" } },
+                                }}
+                              >
+                                <ErrorOutlineIcon sx={{ fontSize: 16, color: "error.main", cursor: "help" }} />
+                              </Tooltip>
                             )}
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2" color="text.secondary">
-                            {doc.chunk_count ?? "—"}
-                          </Typography>
+                          <Typography variant="body2" color="text.secondary">{doc.chunk_count ?? "—"}</Typography>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">
@@ -247,6 +261,23 @@ export default function AdminPage() {
           </CardContent>
         </Card>
       </Box>
+
+      {/* Toast */}
+      <Snackbar
+        open={!!toast}
+        autoHideDuration={5000}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setToast(null)}
+          severity={toast?.severity}
+          variant="filled"
+          sx={{ borderRadius: 2, minWidth: 300 }}
+        >
+          {toast?.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

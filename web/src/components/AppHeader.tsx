@@ -9,7 +9,6 @@ import Typography from "@mui/material/Typography"
 import Box from "@mui/material/Box"
 import Chip from "@mui/material/Chip"
 import Avatar from "@mui/material/Avatar"
-import IconButton from "@mui/material/IconButton"
 import Popover from "@mui/material/Popover"
 import Divider from "@mui/material/Divider"
 import Button from "@mui/material/Button"
@@ -113,22 +112,35 @@ export default function AppHeader({ user, showAdminLink, showChatLink, extraActi
 
         {/* Username + Avatar button */}
         {user && (
-          <IconButton onClick={handleOpenMenu} size="small" sx={{ ml: 0.5, gap: 1, borderRadius: 2, px: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary", display: { xs: "none", sm: "block" } }}>
+          <Box
+            onClick={handleOpenMenu}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              ml: 0.5,
+              px: 1,
+              py: 0.5,
+              borderRadius: 2,
+              cursor: "pointer",
+              "&:hover": { bgcolor: "grey.100" },
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary", display: { xs: "none", sm: "block" } }}>
               {user.username}
             </Typography>
             <Avatar
               sx={{
-                width: 34,
-                height: 34,
+                width: 32,
+                height: 32,
                 bgcolor: stringToColor(user.username),
-                fontSize: "0.8rem",
+                fontSize: "0.75rem",
                 fontWeight: 700,
               }}
             >
               {getInitials(user.username)}
             </Avatar>
-          </IconButton>
+          </Box>
         )}
       </Toolbar>
 

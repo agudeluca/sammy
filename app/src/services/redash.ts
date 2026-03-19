@@ -345,3 +345,104 @@ export function formatKnowledgeContext(articles: KnowledgeArticle[]): string {
 
   return lines.join("\n")
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wall Posts
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface WallPost {
+  postId: number
+  authorUsername: string
+  authorName: string
+  content: string
+  postedAt: string
+}
+
+interface WallPostRow {
+  instanceId: number
+  Usuario: string
+  Nombre: string
+  "Post ID": number
+  Contenido: string
+  "Fecha de Posteo": string
+}
+
+interface WallPostCacheEntry {
+  posts: WallPost[]
+  fetchedAt: number
+}
+const wallPostsCache = new Map<number, WallPostCacheEntry>()
+
+async function fetchWallPosts(instanceId: number): Promise<WallPost[]> {
+  const cached = wallPostsCache.get(instanceId)
+  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+    return cached.posts
+  }
+
+  const rows = await executeRedashQuery<WallPostRow>(
+    config.redashWallPostsQueryId,
+    { instance_id: String(instanceId) },
+    300
+  )
+
+  const posts = rows.map((r) => ({
+    postId: r["Post ID"],
+    authorUsername: r.Usuario,
+    authorName: r.Nombre,
+    content: r.Contenido ?? "",
+    postedAt: r["Fecha de Posteo"] ?? "",
+  }))
+
+  wallPostsCache.set(instanceId, { posts, fetchedAt: Date.now() })
+  return posts
+}
+
+export async function searchWallPosts(
+  instanceId: number,
+  question: string,
+  topK = 5
+): Promise<WallPost[]> {
+  const posts = await fetchWallPosts(instanceId)
+  if (posts.length === 0) return []
+
+  const questionWords = tokenize(question)
+  if (questionWords.length === 0) return posts.slice(0, topK)
+
+  const scored = posts
+    .map((post) => {
+      const haystack = `${post.authorName} ${post.content}`.toLowerCase()
+      const score = questionWords.reduce(
+        (s, w) => s + (haystack.includes(w) ? 1 : 0),
+        0
+      )
+      return { post, score }
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK)
+
+  return scored.map(({ post }) => post)
+}
+
+export async function getRecentWallPosts(
+  instanceId: number,
+  limit = 10
+): Promise<WallPost[]> {
+  const posts = await fetchWallPosts(instanceId)
+  return posts.slice(0, limit)
+}
+
+export function formatWallPostsContext(posts: WallPost[]): string {
+  if (posts.length === 0) return "No se encontraron posteos en el muro."
+
+  const lines: string[] = ["[MURO DE LA COMUNIDAD — Posteos recientes]", ""]
+
+  for (const p of posts) {
+    lines.push(`**${p.authorName}** (${p.postedAt})`)
+    const content = p.content.trim()
+    lines.push(content.length > 800 ? content.slice(0, 800) + "…" : content)
+    lines.push("")
+  }
+
+  return lines.join("\n")
+}

@@ -8,6 +8,9 @@ import {
   formatKnowledgeContext,
   listKnowledgeLibrary,
   formatKnowledgeList,
+  searchWallPosts,
+  getRecentWallPosts,
+  formatWallPostsContext,
 } from "./redash"
 import { queryChunks } from "./pinecone"
 
@@ -81,6 +84,21 @@ const REDASH_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "search_wall_posts",
+    description:
+      "Busca posteos publicados en el muro de la comunidad. Usar cuando el usuario pregunta sobre comunicados, anuncios, noticias, novedades, publicaciones recientes o quiere saber qué se ha posteado en la comunidad.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Tema o palabras clave a buscar. Dejar vacío para ver los más recientes.",
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: "search_documents",
     description:
       "Busca en los documentos y archivos subidos a la comunidad (manuales, reglamentos, presentaciones, contratos). Usar para preguntas sobre contenido específico de documentos.",
@@ -100,6 +118,7 @@ Tienes acceso a herramientas para obtener información actualizada:
 - get_vacation_balance: para preguntas sobre vacaciones, saldo de tiempo libre, días disponibles, licencias
 - list_knowledge_articles: para listar o explorar qué temas/categorías hay en la librería de conocimientos
 - search_knowledge_library: para buscar sobre un tema específico en la librería de conocimientos
+- search_wall_posts: para buscar posteos del muro de la comunidad, anuncios, novedades, comunicados
 - search_documents: para buscar en documentos subidos (manuales, reglamentos, presentaciones)
 
 Reglas:
@@ -136,6 +155,17 @@ async function executeTool(
       }
       const articles = await searchKnowledgeLibrary(ctx.instanceId, input.query, 5)
       return formatKnowledgeContext(articles) || "No se encontraron artículos relevantes."
+    }
+
+    if (name === "search_wall_posts") {
+      if (!ctx.instanceId) {
+        return "No hay muro de comunidad configurado para esta instancia."
+      }
+      const query = input.query?.trim()
+      const posts = query
+        ? await searchWallPosts(ctx.instanceId, query, 5)
+        : await getRecentWallPosts(ctx.instanceId, 10)
+      return formatWallPostsContext(posts)
     }
 
     if (name === "search_documents") {

@@ -8,6 +8,7 @@ process.env.REDASH_API_KEY = "test-key"
 process.env.REDASH_BASE_URL = "https://redash.test"
 process.env.REDASH_VACATION_QUERY_ID = "1"
 process.env.REDASH_KNOWLEDGE_QUERY_ID = "2"
+process.env.REDASH_WALL_POSTS_QUERY_ID = "3"
 
 // Dynamic imports so env vars are set first
 const { default: _, ...redash } = await import("../redash")
@@ -18,9 +19,12 @@ const {
   searchKnowledgeLibrary,
   listKnowledgeLibrary,
   getVacationBalance,
+  searchWallPosts,
+  getRecentWallPosts,
+  formatWallPostsContext,
 } = redash
 
-import type { VacationBalance, KnowledgeArticle } from "../redash"
+import type { VacationBalance, KnowledgeArticle, WallPost } from "../redash"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Rows that mirror the real Redash schema (enabled/disabled status, depth 0/1)
@@ -393,5 +397,120 @@ describe("getVacationBalance", () => {
     const result = await getVacationBalance(214622, 42)
     expect(result).toHaveLength(1)
     expect(result[0].fullName).toBe("Juan Pérez")
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wall Posts
+// ─────────────────────────────────────────────────────────────────────────────
+
+const rawWallPostRows = [
+  {
+    instanceId: 214834,
+    Usuario: "natalia.palero@humand.co",
+    Nombre: "Natalia Palero",
+    "Post ID": 6158318,
+    Contenido: "AI and DevOps: The Future of Development 🚀 AI adoption in DevOps is growing rapidly.",
+    "Fecha de Posteo": "12/09/25 11:02",
+  },
+  {
+    instanceId: 214834,
+    Usuario: "matias.altieri@humand.co",
+    Nombre: "Matías Altieri",
+    "Post ID": 6158336,
+    Contenido: "APPLE TV USADA À VENDA! Tenho uma ótima oferta para você.",
+    "Fecha de Posteo": "24/06/24 19:40",
+  },
+  {
+    instanceId: 214834,
+    Usuario: "instance.automations@humand.co",
+    Nombre: "Comunicações Empresariais",
+    "Post ID": 6158332,
+    Contenido: "Mercados Financeiros Globais se Preparam para Grandes Mudanças",
+    "Fecha de Posteo": "12/09/25 10:56",
+  },
+]
+
+const sampleWallPost: WallPost = {
+  postId: 6158318,
+  authorUsername: "natalia.palero@humand.co",
+  authorName: "Natalia Palero",
+  content: "AI and DevOps: The Future of Development",
+  postedAt: "12/09/25 11:02",
+}
+
+describe("formatWallPostsContext", () => {
+  it("returns no-data message when posts is empty", () => {
+    expect(formatWallPostsContext([])).toContain("No se encontraron")
+  })
+
+  it("includes author name", () => {
+    const result = formatWallPostsContext([sampleWallPost])
+    expect(result).toContain("Natalia Palero")
+  })
+
+  it("includes post content", () => {
+    const result = formatWallPostsContext([sampleWallPost])
+    expect(result).toContain("AI and DevOps")
+  })
+
+  it("includes post date", () => {
+    const result = formatWallPostsContext([sampleWallPost])
+    expect(result).toContain("12/09/25 11:02")
+  })
+
+  it("truncates content longer than 800 chars", () => {
+    const longPost: WallPost = { ...sampleWallPost, content: "x".repeat(1000) }
+    const result = formatWallPostsContext([longPost])
+    expect(result).toContain("…")
+  })
+
+  it("formats multiple posts", () => {
+    const second: WallPost = { ...sampleWallPost, postId: 2, authorName: "Matías Altieri", content: "APPLE TV USADA" }
+    const result = formatWallPostsContext([sampleWallPost, second])
+    expect(result).toContain("Natalia Palero")
+    expect(result).toContain("Matías Altieri")
+  })
+})
+
+describe("getRecentWallPosts", () => {
+  it("returns posts up to the limit", async () => {
+    mockFetch(rawWallPostRows)
+    const results = await getRecentWallPosts(500001, 2)
+    expect(results).toHaveLength(2)
+  })
+
+  it("maps column names correctly", async () => {
+    mockFetch(rawWallPostRows)
+    const results = await getRecentWallPosts(500002, 10)
+    expect(results[0].authorName).toBe("Natalia Palero")
+    expect(results[0].postId).toBe(6158318)
+    expect(results[0].postedAt).toBe("12/09/25 11:02")
+  })
+
+  it("returns empty array when Redash returns no rows", async () => {
+    mockFetch([])
+    const results = await getRecentWallPosts(500003, 10)
+    expect(results).toHaveLength(0)
+  })
+})
+
+describe("searchWallPosts", () => {
+  it("returns posts matching the query", async () => {
+    mockFetch(rawWallPostRows)
+    const results = await searchWallPosts(500004, "devops artificial intelligence", 5)
+    expect(results.some((p) => p.authorName === "Natalia Palero")).toBe(true)
+  })
+
+  it("returns empty array when nothing matches", async () => {
+    mockFetch(rawWallPostRows)
+    const results = await searchWallPosts(500005, "xyzzy foobar quux", 5)
+    expect(results).toHaveLength(0)
+  })
+
+  it("respects topK limit", async () => {
+    mockFetch(rawWallPostRows)
+    const results = await searchWallPosts(500006, "humand empresa mercados", 1)
+    expect(results.length).toBeLessThanOrEqual(1)
   })
 })
