@@ -25,6 +25,9 @@ export const config = {
   redashWallPostsQueryId: Number(
     process.env.REDASH_WALL_POSTS_QUERY_ID ?? "33556",
   ),
+  redashNewsQueryId: Number(
+    process.env.REDASH_NEWS_QUERY_ID ?? "33562",
+  ),
 };
 
 export const HARDCODED_PASSWORD = "huckaton";

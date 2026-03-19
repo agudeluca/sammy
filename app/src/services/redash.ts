@@ -446,3 +446,110 @@ export function formatWallPostsContext(posts: WallPost[]): string {
 
   return lines.join("\n")
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// News
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface NewsArticle {
+  newsId: number
+  title: string
+  content: string
+  authorName: string
+  createdAt: string
+  status: string
+}
+
+interface NewsRow {
+  "Id Noticia": number
+  "Título": string
+  Noticia: string
+  "Nombre Completo": string
+  Creación: string
+  Estado: string
+}
+
+interface NewsCacheEntry {
+  articles: NewsArticle[]
+  fetchedAt: number
+}
+const newsCache = new Map<number, NewsCacheEntry>()
+
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()
+}
+
+async function fetchNews(instanceId: number): Promise<NewsArticle[]> {
+  const cached = newsCache.get(instanceId)
+  if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+    return cached.articles
+  }
+
+  const rows = await executeRedashQuery<NewsRow>(
+    config.redashNewsQueryId,
+    { instance_id: String(instanceId) },
+    300
+  )
+
+  const articles = rows
+    .filter((r) => r.Estado === "PUBLISHED")
+    .map((r) => ({
+      newsId: r["Id Noticia"],
+      title: r["Título"] ?? "",
+      content: stripHtml(r.Noticia ?? ""),
+      authorName: r["Nombre Completo"] ?? "",
+      createdAt: r.Creación ?? "",
+      status: r.Estado,
+    }))
+
+  newsCache.set(instanceId, { articles, fetchedAt: Date.now() })
+  return articles
+}
+
+export async function searchNews(
+  instanceId: number,
+  question: string,
+  topK = 5
+): Promise<NewsArticle[]> {
+  const articles = await fetchNews(instanceId)
+  if (articles.length === 0) return []
+
+  const questionWords = tokenize(question)
+  if (questionWords.length === 0) return articles.slice(0, topK)
+
+  const scored = articles
+    .map((article) => {
+      const haystack = `${article.title} ${article.content}`.toLowerCase()
+      const score = questionWords.reduce(
+        (s, w) => s + (haystack.includes(w) ? (article.title.toLowerCase().includes(w) ? 2 : 1) : 0),
+        0
+      )
+      return { article, score }
+    })
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, topK)
+
+  return scored.map(({ article }) => article)
+}
+
+export async function getRecentNews(instanceId: number, limit = 10): Promise<NewsArticle[]> {
+  const articles = await fetchNews(instanceId)
+  return articles.slice(0, limit)
+}
+
+export function formatNewsContext(articles: NewsArticle[]): string {
+  if (articles.length === 0) return "No se encontraron noticias."
+
+  const lines: string[] = ["[NOTICIAS DE LA COMUNIDAD]", ""]
+
+  for (const a of articles) {
+    lines.push(`**${a.title}** (${a.createdAt})`)
+    if (a.authorName) lines.push(`Autor: ${a.authorName}`)
+    const content = a.content.trim()
+    lines.push(content.length > 800 ? content.slice(0, 800) + "…" : content)
+    lines.push("")
+  }
+
+  return lines.join("\n")
+}

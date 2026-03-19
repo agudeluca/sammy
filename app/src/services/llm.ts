@@ -11,6 +11,9 @@ import {
   searchWallPosts,
   getRecentWallPosts,
   formatWallPostsContext,
+  searchNews,
+  getRecentNews,
+  formatNewsContext,
 } from "./redash"
 import { queryChunks } from "./pinecone"
 
@@ -99,6 +102,21 @@ const REDASH_TOOLS: Anthropic.Tool[] = [
     },
   },
   {
+    name: "search_news",
+    description:
+      "Busca noticias y comunicados oficiales publicados en la comunidad. Usar cuando el usuario pregunta sobre noticias, novedades de la empresa, comunicaciones oficiales, artículos publicados.",
+    input_schema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "Tema o palabras clave a buscar. Dejar vacío para ver las más recientes.",
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: "search_documents",
     description:
       "Busca en los documentos y archivos subidos a la comunidad (manuales, reglamentos, presentaciones, contratos). Usar para preguntas sobre contenido específico de documentos.",
@@ -119,6 +137,7 @@ Tienes acceso a herramientas para obtener información actualizada:
 - list_knowledge_articles: para listar o explorar qué temas/categorías hay en la librería de conocimientos
 - search_knowledge_library: para buscar sobre un tema específico en la librería de conocimientos
 - search_wall_posts: para buscar posteos del muro de la comunidad, anuncios, novedades, comunicados
+- search_news: para buscar noticias y comunicados oficiales publicados en la comunidad
 - search_documents: para buscar en documentos subidos (manuales, reglamentos, presentaciones)
 
 Reglas:
@@ -166,6 +185,17 @@ async function executeTool(
         ? await searchWallPosts(ctx.instanceId, query, 5)
         : await getRecentWallPosts(ctx.instanceId, 10)
       return formatWallPostsContext(posts)
+    }
+
+    if (name === "search_news") {
+      if (!ctx.instanceId) {
+        return "No hay noticias configuradas para esta instancia."
+      }
+      const query = input.query?.trim()
+      const articles = query
+        ? await searchNews(ctx.instanceId, query, 5)
+        : await getRecentNews(ctx.instanceId, 10)
+      return formatNewsContext(articles)
     }
 
     if (name === "search_documents") {

@@ -46,9 +46,9 @@ export default function AppHeader({
   extraActions,
 }: AppHeaderProps) {
   const router = useRouter()
-  const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
 
-  const handleOpenMenu = (e: React.MouseEvent<HTMLButtonElement>) => setAnchorEl(e.currentTarget)
+  const handleOpenMenu = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget)
   const handleClose = () => setAnchorEl(null)
 
   const handleLogout = () => {

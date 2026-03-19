@@ -25,7 +25,10 @@ const config = [
     },
     plugins: {
       "@typescript-eslint": tseslint,
+      // Registered under both keys: rules use "@next/next/..." prefix,
+      // Next.js build detects the plugin via the "next" key
       "@next/next": nextPlugin,
+      next: nextPlugin,
       prettier: prettierPlugin,
     },
     rules: {
