@@ -1,0 +1,31 @@
+services:
+  app:
+    image: ${DOCKERHUB_TAG_APP}
+    ports:
+      - "3001:3001"
+    volumes:
+      - sammy-data:/app/data
+    environment:
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_INDEX=${PINECONE_INDEX:-sammy}
+      - PINECONE_HOST=${PINECONE_HOST}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRY=${JWT_EXPIRY:-8h}
+      - DATABASE_PATH=/app/data/sammy.db
+      - PORT=3001
+      - FRONTEND_URL=${FRONTEND_URL}
+    restart: unless-stopped
+
+  web:
+    image: ${DOCKERHUB_TAG_WEB}
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  sammy-data:
