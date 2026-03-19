@@ -48,7 +48,7 @@ jobs:
         run: |
           echo "Waiting for service to come up..."
           for i in $(seq 1 24); do
-            if curl -sfL "http://sammy-sammy-bngeq6-f25a46-167-235-200-53.traefik.me/health" > /dev/null 2>&1; then
+            if curl -sfkL "https://sammy-sammy-bngeq6-f25a46-167-235-200-53.traefik.me/health" > /dev/null 2>&1; then
               echo "Service is up!"
               exit 0
             fi
