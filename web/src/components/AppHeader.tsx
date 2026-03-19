@@ -97,7 +97,7 @@ export default function AppHeader({
             size="small"
             startIcon={<AdminPanelSettingsOutlinedIcon />}
             onClick={() => router.push("/admin")}
-            sx={{ color: "text.secondary", fontWeight: 600, fontSize: "0.85rem" }}
+            sx={{ color: "text.secondary", fontWeight: 600, fontSize: "0.85rem", height: 36 }}
           >
             Admin
           </Button>
@@ -107,7 +107,7 @@ export default function AppHeader({
             size="small"
             startIcon={<ChatBubbleOutlineIcon />}
             onClick={() => router.push("/chat")}
-            sx={{ color: "text.secondary", fontWeight: 600, fontSize: "0.85rem" }}
+            sx={{ color: "text.secondary", fontWeight: 600, fontSize: "0.85rem", height: 36 }}
           >
             Chat
           </Button>

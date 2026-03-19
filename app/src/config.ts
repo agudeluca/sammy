@@ -25,9 +25,7 @@ export const config = {
   redashWallPostsQueryId: Number(
     process.env.REDASH_WALL_POSTS_QUERY_ID ?? "33556",
   ),
-  redashNewsQueryId: Number(
-    process.env.REDASH_NEWS_QUERY_ID ?? "33562",
-  ),
+  redashNewsQueryId: Number(process.env.REDASH_NEWS_QUERY_ID ?? "33562"),
   redashRecognitionsQueryId: Number(
     process.env.REDASH_RECOGNITIONS_QUERY_ID ?? "33563",
   ),
@@ -48,16 +46,20 @@ export interface User {
 }
 
 export const communities: Community[] = [
-  { id: "214622", name: "PROYECTO TEAM 35 - Instance ID 214622" },
   { id: "214834", name: "PROYECTO TEAM 35 V2 - Instance ID 214834" },
+  { id: "214622", name: "PROYECTO TEAM 35 - Instance ID 214622" },
 ];
 
 export const users: User[] = [
-  { id: "8066601", username: "admin", communityId: "214622", role: "admin" },
-  { id: "8067655", username: "admin", communityId: "214834", role: "admin" },
+  {
+    id: "8083469",
+    username: "maria",
+    communityId: "214834",
+    role: "admin",
+  },
   {
     id: "8081349",
-    username: "juan.huckathon",
+    username: "juan",
     communityId: "214834",
     role: "collaborator",
   },
