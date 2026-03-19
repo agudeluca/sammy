@@ -16,5 +16,6 @@ const app = new Elysia()
   .listen(config.port)
 
 console.log(`Sammy API running on http://localhost:${config.port}`)
+console.log(`REDASH_API_KEY: ${config.redashApiKey ? config.redashApiKey.slice(0, 6) + "..." : "NOT SET"}`)
 
 export type App = typeof app

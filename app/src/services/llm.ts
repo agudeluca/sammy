@@ -80,7 +80,7 @@ const REDASH_TOOLS: Anthropic.Tool[] = [
   {
     name: "search_knowledge_library",
     description:
-      "Busca artículos en la librería de conocimientos de la comunidad sobre políticas, procedimientos, beneficios, reglamentos internos y cualquier información institucional. Usar cuando el usuario pregunta sobre un tema específico.",
+      "Busca artículos en la librería de conocimientos de la comunidad sobre políticas, procedimientos, beneficios, reglamentos internos, permisos, licencias, y cualquier información institucional. SIEMPRE usar para preguntas sobre beneficios, ventajas, perks, descuentos, coberturas médicas, o cualquier tema de HR/RRHH.",
     input_schema: {
       type: "object",
       properties: {
@@ -153,7 +153,7 @@ const SYSTEM_PROMPT = `Eres Sammy, un asistente amable que responde preguntas de
 Tienes acceso a herramientas para obtener información actualizada:
 - get_vacation_balance: para preguntas sobre vacaciones, saldo de tiempo libre, días disponibles, licencias
 - list_knowledge_articles: para listar o explorar qué temas/categorías hay en la librería de conocimientos
-- search_knowledge_library: para buscar sobre un tema específico en la librería de conocimientos
+- search_knowledge_library: para buscar sobre un tema específico en la librería de conocimientos (beneficios, políticas, permisos, reglamentos, coberturas, descuentos, etc.)
 - search_wall_posts: para buscar posteos del muro de la comunidad, anuncios, novedades, comunicados
 - search_news: para buscar noticias y comunicados oficiales publicados en la comunidad
 - search_recognitions: para buscar reconocimientos otorgados entre colaboradores, puntos, premios
