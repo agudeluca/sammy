@@ -11,7 +11,7 @@ import { readFileSync } from "fs"
 import { join } from "path"
 
 const BASE = process.env.API_URL ?? "http://localhost:3001"
-const COMMUNITY_ID = process.env.COMMUNITY_ID ?? "214622"
+const COMMUNITY_ID = process.env.COMMUNITY_ID ?? "team35"
 const USERNAME = "admin"
 const PASSWORD = "huckaton"
 

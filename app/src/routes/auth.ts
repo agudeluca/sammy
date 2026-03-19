@@ -6,22 +6,25 @@ export const authRoutes = new Elysia({ prefix: "/api/auth" })
   .get("/communities", () => communities)
   .post(
     "/login",
-    async ({ body }) => {
+    async ({ body, set }) => {
       const { communityId, username, password } = body
 
-      const unauthorized = () =>
-        new Response(JSON.stringify({ message: "Invalid credentials" }), {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        })
-
-      if (password !== HARDCODED_PASSWORD) return unauthorized()
+      if (password !== HARDCODED_PASSWORD) {
+        set.status = 401
+        return { message: "Invalid credentials" }
+      }
 
       const community = getCommunityById(communityId)
-      if (!community) return unauthorized()
+      if (!community) {
+        set.status = 401
+        return { message: "Invalid credentials" }
+      }
 
       const user = getUserByUsername(communityId, username)
-      if (!user) return unauthorized()
+      if (!user) {
+        set.status = 401
+        return { message: "Invalid credentials" }
+      }
 
       const token = await signToken({
         userId: user.id,
