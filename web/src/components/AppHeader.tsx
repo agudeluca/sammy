@@ -39,7 +39,12 @@ function stringToColor(str: string) {
   return colors[Math.abs(hash) % colors.length]
 }
 
-export default function AppHeader({ user, showAdminLink, showChatLink, extraActions }: AppHeaderProps) {
+export default function AppHeader({
+  user,
+  showAdminLink,
+  showChatLink,
+  extraActions,
+}: AppHeaderProps) {
   const router = useRouter()
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null)
 
@@ -126,7 +131,14 @@ export default function AppHeader({ user, showAdminLink, showChatLink, extraActi
               "&:hover": { bgcolor: "grey.100" },
             }}
           >
-            <Typography variant="body2" sx={{ fontWeight: 500, color: "text.secondary", display: { xs: "none", sm: "block" } }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                color: "text.secondary",
+                display: { xs: "none", sm: "block" },
+              }}
+            >
               {user.username}
             </Typography>
             <Avatar
@@ -179,7 +191,10 @@ export default function AppHeader({ user, showAdminLink, showChatLink, extraActi
             {getInitials(user?.username ?? "")}
           </Avatar>
           <Box>
-            <Typography variant="body2" sx={{ fontWeight: 700, color: "text.primary", lineHeight: 1.3 }}>
+            <Typography
+              variant="body2"
+              sx={{ fontWeight: 700, color: "text.primary", lineHeight: 1.3 }}
+            >
               {user?.username}
             </Typography>
             <Typography variant="caption" sx={{ color: "text.secondary" }}>

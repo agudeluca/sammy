@@ -76,17 +76,16 @@ export default function ChatPage() {
     }
   }
 
-  const clearChat = () => {
-    setMessages([])
-    localStorage.removeItem(storageKey)
-  }
-
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", bgcolor: "background.default" }}>
-      <AppHeader
-        user={user}
-        showAdminLink={user?.role === "admin"}
-      />
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100vh",
+        bgcolor: "background.default",
+      }}
+    >
+      <AppHeader user={user} showAdminLink={user?.role === "admin"} />
 
       {/* Messages */}
       <Box
@@ -169,11 +168,22 @@ export default function ChatPage() {
                 {msg.role === "user" ? "Vos" : "Sammy"}
               </Typography>
               {msg.role === "assistant" ? (
-                <Box className="markdown" sx={{ "& p": { m: 0 }, "& p + p": { mt: 1 }, lineHeight: 1.7, fontSize: "0.95rem" }}>
+                <Box
+                  className="markdown"
+                  sx={{
+                    "& p": { m: 0 },
+                    "& p + p": { mt: 1 },
+                    lineHeight: 1.7,
+                    fontSize: "0.95rem",
+                  }}
+                >
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                 </Box>
               ) : (
-                <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.6 }}>
+                <Typography
+                  variant="body2"
+                  sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word", lineHeight: 1.6 }}
+                >
                   {msg.content}
                 </Typography>
               )}
@@ -194,7 +204,18 @@ export default function ChatPage() {
                 maxWidth: "80%",
               }}
             >
-              <Typography variant="caption" sx={{ display: "block", fontWeight: 700, mb: 0.5, opacity: 0.7, fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  display: "block",
+                  fontWeight: 700,
+                  mb: 0.5,
+                  opacity: 0.7,
+                  fontSize: "0.7rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
                 Sammy
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>

@@ -23,7 +23,10 @@ import AppHeader from "@/components/AppHeader"
 import { api, type Document } from "@/lib/api"
 import { getUser, isLoggedIn } from "@/lib/auth"
 
-const STATUS_CONFIG: Record<string, { label: string; color: "default" | "warning" | "success" | "error" }> = {
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; color: "default" | "warning" | "success" | "error" }
+> = {
   pending: { label: "Pendiente", color: "default" },
   processing: { label: "Procesando", color: "warning" },
   processed: { label: "Procesado", color: "success" },
@@ -47,7 +50,10 @@ export default function AdminPage() {
   const [documents, setDocuments] = useState<Document[]>([])
   const [uploading, setUploading] = useState(false)
   const [dragging, setDragging] = useState(false)
-  const [toast, setToast] = useState<{ message: string; severity: "error" | "success" | "info" } | null>(null)
+  const [toast, setToast] = useState<{
+    message: string
+    severity: "error" | "success" | "info"
+  } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const user = getUser()
@@ -82,9 +88,12 @@ export default function AdminPage() {
     pollRef.current = setInterval(loadDocuments, 3000)
   }
 
-  useEffect(() => () => {
-    if (pollRef.current) clearInterval(pollRef.current)
-  }, [])
+  useEffect(
+    () => () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    },
+    [],
+  )
 
   const uploadFile = async (file: File) => {
     setUploading(true)
@@ -115,7 +124,14 @@ export default function AdminPage() {
   }
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: "background.default" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        bgcolor: "background.default",
+      }}
+    >
       <AppHeader user={user} showChatLink />
 
       <Box sx={{ maxWidth: 960, width: "100%", mx: "auto", p: { xs: 2, sm: 3 }, flex: 1 }}>
@@ -147,7 +163,10 @@ export default function AdminPage() {
                 bgcolor: dragging ? "primary.light" : "transparent",
                 "&:hover": { borderColor: "primary.main", bgcolor: "primary.light" },
               }}
-              onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragging(true)
+              }}
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
@@ -159,15 +178,23 @@ export default function AdminPage() {
                 style={{ display: "none" }}
                 onChange={handleFileChange}
               />
-              <UploadFileOutlinedIcon sx={{ fontSize: 40, color: uploading ? "primary.main" : "grey.400", mb: 1 }} />
+              <UploadFileOutlinedIcon
+                sx={{ fontSize: 40, color: uploading ? "primary.main" : "grey.400", mb: 1 }}
+              />
               {uploading ? (
-                <Typography variant="body2" color="primary">Subiendo...</Typography>
+                <Typography variant="body2" color="primary">
+                  Subiendo...
+                </Typography>
               ) : (
                 <>
                   <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary" }}>
                     Arrastrá un archivo o hacé clic para seleccionar
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ mt: 0.5, display: "block" }}
+                  >
                     PDF, DOCX, TXT — máx. 50 MB
                   </Typography>
                 </>
@@ -191,7 +218,9 @@ export default function AdminPage() {
             {documents.length === 0 ? (
               <Box sx={{ py: 6, textAlign: "center" }}>
                 <InsertDriveFileOutlinedIcon sx={{ fontSize: 40, color: "grey.300", mb: 1.5 }} />
-                <Typography variant="body2" color="text.secondary">No hay documentos todavía</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  No hay documentos todavía
+                </Typography>
               </Box>
             ) : (
               <TableContainer component={Box}>
@@ -210,7 +239,9 @@ export default function AdminPage() {
                         <TableCell>
                           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             <InsertDriveFileOutlinedIcon sx={{ fontSize: 16, color: "grey.400" }} />
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>{doc.filename}</Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {doc.filename}
+                            </Typography>
                           </Box>
                         </TableCell>
                         <TableCell>
@@ -239,13 +270,17 @@ export default function AdminPage() {
                                   arrow: { sx: { color: "grey.900" } },
                                 }}
                               >
-                                <ErrorOutlineIcon sx={{ fontSize: 16, color: "error.main", cursor: "help" }} />
+                                <ErrorOutlineIcon
+                                  sx={{ fontSize: 16, color: "error.main", cursor: "help" }}
+                                />
                               </Tooltip>
                             )}
                           </Box>
                         </TableCell>
                         <TableCell>
-                          <Typography variant="body2" color="text.secondary">{doc.chunk_count ?? "—"}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {doc.chunk_count ?? "—"}
+                          </Typography>
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" color="text.secondary">

@@ -8,7 +8,7 @@ async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
     ...(init.headers as Record<string, string>),
   }
   if (token) {
-    (headers as Record<string, string>)["Authorization"] = `Bearer ${token}`
+    ;(headers as Record<string, string>)["Authorization"] = `Bearer ${token}`
   }
 
   const res = await fetch(`${BASE}${path}`, { ...init, headers })
