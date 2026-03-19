@@ -1,6 +1,6 @@
 import { getToken, clearSession } from "./auth"
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
+const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = getToken()
