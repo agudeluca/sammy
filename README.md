@@ -65,6 +65,7 @@ Simple username/password form. Credentials are set in `.env`. On success, a JWT 
 
 ## Architecture
 
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Docker Compose                        │
