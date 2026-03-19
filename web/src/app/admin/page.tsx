@@ -2,14 +2,29 @@
 
 import { useEffect, useRef, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import Box from "@mui/material/Box"
+import Typography from "@mui/material/Typography"
+import Card from "@mui/material/Card"
+import CardContent from "@mui/material/CardContent"
+import Table from "@mui/material/Table"
+import TableBody from "@mui/material/TableBody"
+import TableCell from "@mui/material/TableCell"
+import TableContainer from "@mui/material/TableContainer"
+import TableHead from "@mui/material/TableHead"
+import TableRow from "@mui/material/TableRow"
+import Chip from "@mui/material/Chip"
+import Alert from "@mui/material/Alert"
+import UploadFileOutlinedIcon from "@mui/icons-material/UploadFileOutlined"
+import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined"
+import AppHeader from "@/components/AppHeader"
 import { api, type Document } from "@/lib/api"
-import { getUser, clearSession, isLoggedIn } from "@/lib/auth"
+import { getUser, isLoggedIn } from "@/lib/auth"
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: "#9ca3af",
-  processing: "#f59e0b",
-  processed: "#10b981",
-  error: "#ef4444",
+const STATUS_CONFIG: Record<string, { label: string; color: "default" | "warning" | "success" | "error" }> = {
+  pending: { label: "Pendiente", color: "default" },
+  processing: { label: "Procesando", color: "warning" },
+  processed: { label: "Procesado", color: "success" },
+  error: { label: "Error", color: "error" },
 }
 
 export default function AdminPage() {
@@ -35,9 +50,15 @@ export default function AdminPage() {
   }, [])
 
   useEffect(() => {
-    if (!isLoggedIn()) { router.replace("/login"); return }
+    if (!isLoggedIn()) {
+      router.replace("/login")
+      return
+    }
     const u = getUser()
-    if (u?.role !== "admin") { router.replace("/chat"); return }
+    if (u?.role !== "admin") {
+      router.replace("/chat")
+      return
+    }
     loadDocuments()
   }, [router, loadDocuments])
 
@@ -46,7 +67,9 @@ export default function AdminPage() {
     pollRef.current = setInterval(loadDocuments, 3000)
   }
 
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
+  useEffect(() => () => {
+    if (pollRef.current) clearInterval(pollRef.current)
+  }, [])
 
   const uploadFile = async (file: File) => {
     setUploadError("")
@@ -75,123 +98,155 @@ export default function AdminPage() {
     if (file) uploadFile(file)
   }
 
-  const logout = () => { clearSession(); router.replace("/login") }
-
   return (
-    <div style={styles.page}>
-      <header style={styles.header}>
-        <div>
-          <h1 style={styles.headerTitle}>Admin</h1>
-          <span style={styles.community}>{user?.communityId}</span>
-        </div>
-        <div style={styles.headerRight}>
-          <button onClick={() => router.push("/chat")} style={styles.linkBtn}>Chat</button>
-          <button onClick={logout} style={styles.linkBtn}>Logout</button>
-        </div>
-      </header>
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: "background.default" }}>
+      <AppHeader user={user} showChatLink />
 
-      <main style={styles.main}>
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>Upload Document</h2>
-          <div
-            style={{ ...styles.dropzone, ...(dragging ? styles.dropzoneActive : {}) }}
-            onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.docx,.txt"
-              style={{ display: "none" }}
-              onChange={handleFileChange}
-            />
-            {uploading ? (
-              <p>Uploading...</p>
-            ) : (
-              <p>Drop a file here or click to browse<br /><small style={{ color: "#888" }}>PDF, DOCX, TXT — max 50MB</small></p>
+      <Box sx={{ maxWidth: 960, width: "100%", mx: "auto", p: { xs: 2, sm: 3 }, flex: 1 }}>
+        {/* Page title */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: "text.primary" }}>
+            Administración
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Cargá y gestioná los documentos de tu comunidad
+          </Typography>
+        </Box>
+
+        {/* Upload card */}
+        <Card sx={{ mb: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 2, color: "text.primary" }}>
+              Subir documento
+            </Typography>
+            <Box
+              sx={{
+                border: "2px dashed",
+                borderColor: dragging ? "primary.main" : "grey.200",
+                borderRadius: 2,
+                p: 4,
+                textAlign: "center",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                bgcolor: dragging ? "primary.light" : "transparent",
+                "&:hover": {
+                  borderColor: "primary.main",
+                  bgcolor: "primary.light",
+                },
+              }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragging(true)
+              }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.txt"
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
+              <UploadFileOutlinedIcon sx={{ fontSize: 40, color: uploading ? "primary.main" : "grey.400", mb: 1 }} />
+              {uploading ? (
+                <Typography variant="body2" color="primary">
+                  Subiendo...
+                </Typography>
+              ) : (
+                <>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary" }}>
+                    Arrastrá un archivo o hacé clic para seleccionar
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+                    PDF, DOCX, TXT — máx. 50 MB
+                  </Typography>
+                </>
+              )}
+            </Box>
+            {uploadError && (
+              <Alert severity="error" sx={{ mt: 2, borderRadius: 2 }}>
+                {uploadError}
+              </Alert>
             )}
-          </div>
-          {uploadError && <p style={styles.error}>{uploadError}</p>}
-        </section>
+          </CardContent>
+        </Card>
 
-        <section style={styles.section}>
-          <h2 style={styles.sectionTitle}>Documents</h2>
-          {documents.length === 0 ? (
-            <p style={{ color: "#888" }}>No documents yet.</p>
-          ) : (
-            <table style={styles.table}>
-              <thead>
-                <tr>
-                  <th style={styles.th}>Filename</th>
-                  <th style={styles.th}>Status</th>
-                  <th style={styles.th}>Chunks</th>
-                  <th style={styles.th}>Uploaded</th>
-                </tr>
-              </thead>
-              <tbody>
-                {documents.map((doc) => (
-                  <tr key={doc.id}>
-                    <td style={styles.td}>{doc.filename}</td>
-                    <td style={styles.td}>
-                      <span style={{ ...styles.badge, background: STATUS_COLORS[doc.status] }}>
-                        {doc.status}
-                      </span>
-                      {doc.error_msg && <span style={styles.errorInline}> {doc.error_msg}</span>}
-                    </td>
-                    <td style={styles.td}>{doc.chunk_count ?? "—"}</td>
-                    <td style={styles.td}>{new Date(doc.created_at).toLocaleString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </section>
-      </main>
-    </div>
+        {/* Documents table */}
+        <Card>
+          <CardContent sx={{ p: 0, "&:last-child": { pb: 0 } }}>
+            <Box sx={{ px: 3, pt: 3, pb: 2, borderBottom: "1px solid", borderColor: "grey.100" }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600, color: "text.primary" }}>
+                Documentos
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {documents.length} documento{documents.length !== 1 ? "s" : ""}
+              </Typography>
+            </Box>
+
+            {documents.length === 0 ? (
+              <Box sx={{ py: 6, textAlign: "center" }}>
+                <InsertDriveFileOutlinedIcon sx={{ fontSize: 40, color: "grey.300", mb: 1.5 }} />
+                <Typography variant="body2" color="text.secondary">
+                  No hay documentos todavía
+                </Typography>
+              </Box>
+            ) : (
+              <TableContainer component={Box}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Archivo</TableCell>
+                      <TableCell>Estado</TableCell>
+                      <TableCell>Chunks</TableCell>
+                      <TableCell>Fecha</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {documents.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <InsertDriveFileOutlinedIcon sx={{ fontSize: 16, color: "grey.400" }} />
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {doc.filename}
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Box>
+                            <Chip
+                              label={STATUS_CONFIG[doc.status]?.label ?? doc.status}
+                              color={STATUS_CONFIG[doc.status]?.color ?? "default"}
+                              size="small"
+                            />
+                            {doc.error_msg && (
+                              <Typography variant="caption" color="error" sx={{ display: "block", mt: 0.5 }}>
+                                {doc.error_msg}
+                              </Typography>
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {doc.chunk_count ?? "—"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="text.secondary">
+                            {new Date(doc.created_at).toLocaleString("es-AR")}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
   )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  page: { minHeight: "100vh", background: "#f5f5f5" },
-  header: {
-    background: "#fff",
-    borderBottom: "1px solid #e5e7eb",
-    padding: "1rem 2rem",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  headerTitle: { margin: 0, fontSize: "1.25rem", fontWeight: 700 },
-  community: { fontSize: "0.8rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: 1 },
-  headerRight: { display: "flex", gap: "1rem" },
-  linkBtn: {
-    background: "none",
-    border: "none",
-    color: "#2563eb",
-    cursor: "pointer",
-    fontSize: "0.9rem",
-    fontWeight: 600,
-    padding: "0.25rem 0.5rem",
-  },
-  main: { maxWidth: 900, margin: "0 auto", padding: "2rem" },
-  section: { background: "#fff", borderRadius: 12, padding: "1.5rem", marginBottom: "1.5rem", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" },
-  sectionTitle: { margin: "0 0 1rem", fontSize: "1rem", fontWeight: 700 },
-  dropzone: {
-    border: "2px dashed #d1d5db",
-    borderRadius: 8,
-    padding: "2rem",
-    textAlign: "center",
-    cursor: "pointer",
-    transition: "border-color 0.15s",
-    color: "#6b7280",
-  },
-  dropzoneActive: { borderColor: "#2563eb", background: "#eff6ff" },
-  error: { color: "#ef4444", fontSize: "0.85rem", marginTop: "0.5rem" },
-  table: { width: "100%", borderCollapse: "collapse" },
-  th: { textAlign: "left", padding: "0.5rem 0.75rem", borderBottom: "2px solid #e5e7eb", fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", textTransform: "uppercase" },
-  td: { padding: "0.75rem", borderBottom: "1px solid #f3f4f6", fontSize: "0.9rem" },
-  badge: { display: "inline-block", padding: "0.2rem 0.6rem", borderRadius: 99, color: "#fff", fontSize: "0.75rem", fontWeight: 600 },
-  errorInline: { color: "#ef4444", fontSize: "0.75rem" },
 }

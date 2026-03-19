@@ -96,27 +96,21 @@ export interface VacationBalance {
   employeeInternalId: string
   fullName: string
   policyType: string
-  assignedTotal: number
-  balanceAdjustment: number
-  daysUsed: number
-  usedBalance: number
-  futureDaysRequested: number
-  availableBalance: number
-  availableBalanceToday: number
+  startDate: string
+  endDate: string
+  currentBalance: number
+  expirationDate: string | null
 }
 
 interface VacationRow {
   user_id: number
-  Usuario: string
-  "Nombre completo": string
-  "Tipo Política": string
-  "Asignados totales": number
-  "Ajuste de saldos": number
-  "Días consumidos": number
-  "Saldo consumido": number
-  "Días solicitados a futuro": number
-  "Saldo disponible": number
-  "Saldo disponible a hoy": number
+  employeeInternalId: string
+  "Nombre del Colaborador": string
+  "Tipo de Política": string
+  startDate: string
+  endDate: string
+  currentBalance: number
+  expirationDate: string | null
 }
 
 export async function getVacationBalance(
@@ -124,22 +118,19 @@ export async function getVacationBalance(
   userId: number
 ): Promise<VacationBalance[]> {
   const rows = await executeRedashQuery<VacationRow>(config.redashVacationQueryId, {
-    instance_id: instanceId,
-    employee_id: userId,
+    instance_id: String(instanceId),
+    user_id: String(userId),
   })
 
   return rows.map((row) => ({
     userId: row.user_id,
-    employeeInternalId: row.Usuario,
-    fullName: row["Nombre completo"],
-    policyType: row["Tipo Política"],
-    assignedTotal: row["Asignados totales"],
-    balanceAdjustment: row["Ajuste de saldos"],
-    daysUsed: row["Días consumidos"],
-    usedBalance: row["Saldo consumido"],
-    futureDaysRequested: row["Días solicitados a futuro"],
-    availableBalance: row["Saldo disponible"],
-    availableBalanceToday: row["Saldo disponible a hoy"],
+    employeeInternalId: row.employeeInternalId,
+    fullName: row["Nombre del Colaborador"],
+    policyType: row["Tipo de Política"],
+    startDate: row.startDate,
+    endDate: row.endDate,
+    currentBalance: row.currentBalance,
+    expirationDate: row.expirationDate ?? null,
   }))
 }
 
@@ -156,30 +147,15 @@ export function formatVacationContext(balances: VacationBalance[]): string {
 
   for (const b of balances) {
     lines.push(`Política: ${b.policyType}`)
-    lines.push(`  • Días asignados en el ciclo : ${b.assignedTotal}`)
-    lines.push(`  • Ajuste manual de saldo     : ${b.balanceAdjustment}`)
-    lines.push(`  • Días consumidos            : ${b.daysUsed}`)
-    lines.push(`  • Saldo consumido            : ${b.usedBalance}`)
-    lines.push(`  • Días solicitados a futuro  : ${b.futureDaysRequested}`)
-    lines.push(`  • Saldo disponible a hoy     : ${b.availableBalanceToday}`)
-    lines.push(`  • Saldo disponible total     : ${b.availableBalance}`)
+    lines.push(`  • Saldo disponible : ${b.currentBalance}`)
+    lines.push(`  • Período          : ${b.startDate} – ${b.endDate}`)
+    if (b.expirationDate) {
+      lines.push(`  • Vence            : ${b.expirationDate}`)
+    }
     lines.push("")
   }
 
   return lines.join("\n")
-}
-
-export function isVacationQuery(question: string): boolean {
-  const lower = question.toLowerCase()
-  const keywords = [
-    "vacacion", "vacación", "días libres", "dias libres",
-    "días de descanso", "dias de descanso", "saldo", "balance",
-    "días que me quedan", "dias que me quedan", "cuántos días", "cuantos dias",
-    "licencia", "tiempo libre", "días disponibles", "dias disponibles",
-    "holiday", "pto", "time off", "política de tiempo", "politica de tiempo",
-    "me quedan", "tengo disponible", "ausencia",
-  ]
-  return keywords.some((kw) => lower.includes(kw))
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -277,6 +253,18 @@ function tokenize(text: string): string[] {
 }
 
 /**
+ * Returns all knowledge articles organized by top-level category (depth=0 parents first).
+ * Useful for browsing/listing available topics.
+ */
+export async function listKnowledgeLibrary(instanceId: number): Promise<KnowledgeArticle[]> {
+  const articles = await fetchKnowledgeLibrary(instanceId)
+  // Return top-level categories + their direct children, sorted by depth then title
+  return articles
+    .filter((a) => a.status === "enabled" || a.status === "PUBLISHED")
+    .sort((a, b) => a.depth - b.depth || a.title.localeCompare(b.title))
+}
+
+/**
  * Fetches and returns the top-K most relevant knowledge articles for the question.
  * Returns empty array if none are relevant (score = 0).
  */
@@ -298,6 +286,39 @@ export async function searchKnowledgeLibrary(
     .slice(0, topK)
 
   return scored.map(({ article }) => article)
+}
+
+/**
+ * Formats the full knowledge library as a categorized list for browsing.
+ */
+export function formatKnowledgeList(articles: KnowledgeArticle[]): string {
+  if (articles.length === 0) return ""
+
+  const lines: string[] = [
+    "[LIBRERÍA DE CONOCIMIENTOS — Categorías y artículos disponibles]",
+    "",
+  ]
+
+  const roots = articles.filter((a) => a.depth === 0)
+  const byParent = new Map<number, KnowledgeArticle[]>()
+  for (const a of articles) {
+    if (a.parentId !== null) {
+      const list = byParent.get(a.parentId) ?? []
+      list.push(a)
+      byParent.set(a.parentId, list)
+    }
+  }
+
+  for (const root of roots) {
+    lines.push(`**${root.title}**`)
+    const children = byParent.get(root.libraryId) ?? []
+    for (const child of children) {
+      lines.push(`  - ${child.title}`)
+    }
+    lines.push("")
+  }
+
+  return lines.join("\n")
 }
 
 /**

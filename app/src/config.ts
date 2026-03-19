@@ -16,8 +16,12 @@ export const config = {
   // Redash
   redashBaseUrl: process.env.REDASH_BASE_URL ?? "https://redash.humand.co",
   redashApiKey: process.env.REDASH_API_KEY ?? "",
-  redashVacationQueryId: Number(process.env.REDASH_VACATION_QUERY_ID ?? "33517"),
-  redashKnowledgeQueryId: Number(process.env.REDASH_KNOWLEDGE_QUERY_ID ?? "33514"),
+  redashVacationQueryId: Number(
+    process.env.REDASH_VACATION_QUERY_ID ?? "33517",
+  ),
+  redashKnowledgeQueryId: Number(
+    process.env.REDASH_KNOWLEDGE_QUERY_ID ?? "33514",
+  ),
 };
 
 export const HARDCODED_PASSWORD = "huckaton";
@@ -35,47 +39,17 @@ export interface User {
 }
 
 export const communities: Community[] = [
-  { id: "team35", name: "PROYECTO TEAM 35 - Instance ID 214622" },
-  { id: "team35v2", name: "PROYECTO TEAM 35 V2 - Instance ID 214834" },
+  { id: "214622", name: "PROYECTO TEAM 35 - Instance ID 214622" },
+  { id: "214834", name: "PROYECTO TEAM 35 V2 - Instance ID 214834" },
 ];
 
 export const users: User[] = [
-  { id: "8066601", username: "admin", communityId: "team35", role: "admin" },
-  { id: "8067655", username: "admin", communityId: "team35v2", role: "admin" },
+  { id: "8066601", username: "admin", communityId: "214622", role: "admin" },
+  { id: "8067655", username: "admin", communityId: "214834", role: "admin" },
   {
-    id: "8066601",
-    username: "paula.soardo",
-    communityId: "team35",
-    role: "collaborator",
-  },
-  {
-    id: "8067453",
-    username: "violeta.alcibar",
-    communityId: "team35",
-    role: "collaborator",
-  },
-  {
-    id: "8067859",
-    username: "natalia.palero",
-    communityId: "team35",
-    role: "collaborator",
-  },
-  {
-    id: "8067654",
-    username: "paula.soardo",
-    communityId: "team35v2",
-    role: "collaborator",
-  },
-  {
-    id: "8067653",
-    username: "violeta.alcibar",
-    communityId: "team35v2",
-    role: "collaborator",
-  },
-  {
-    id: "8067655",
-    username: "natalia.palero",
-    communityId: "team35v2",
+    id: "8081349",
+    username: "juan.huckathon",
+    communityId: "214834",
     role: "collaborator",
   },
 ];
@@ -85,8 +59,8 @@ export const users: User[] = [
  * Add new communities here as the platform grows.
  */
 export const communityInstanceMap: Record<string, number> = {
-  team35: 214622,
-  team35v2: 214834,
+  "214622": 214622,
+  "214834": 214834,
 };
 
 export function getUserByUsername(
